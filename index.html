@@ -1,0 +1,206 @@
+<!-- 
+    Implementation of Rigid Body Dynamics 
+    - handles impulse based collision
+    - different primitive shapes and sizes of rigid body 
+    - edge-edge and face-vertex collision detection 
+
+    - used O3D as a Renderer - http://code.google.com/p/o3d/
+    
+    By Shrimantee Roy
+ -->
+
+
+<!-- 
+    Reference : https://graphics.pixar.com/pbm2001/pdf/notesg.pdf :
+    Physically Based Modeling Rigid Body Simulation by David Baraff
+    Pixar Animation Studios
+ -->
+<!-- http://www.java2s.com/Open-Source/Javascript_Free_Code/Library/Download_o3djs_Free_Java_Code.htm -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript" src="../3rdparty/o3d-webgl/base.js"></script>
+<script type="text/javascript" src="../3rdparty/o3djs/base.js"></script>
+<script type="text/javascript" src="rbd-physics.js"></script>
+<script type="text/javascript" src="renderSystem.js"></script>
+<style type="text/css">
+</style>
+<script type="text/javascript">
+
+var g_renderer = new Renderer();
+var g_running = true;
+
+function main()
+{
+    initPhysics();
+    var eyePosition = [0, -2, 22];
+    var targetPosition = [0, -3, 0];
+    var bodyColors = [[Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1), Math.random(1),Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 0.1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [Math.random(1),Math.random(1), Math.random(1), 1],
+                      [0.8, 0.7, 0.7, 1],
+                      [0.7, 0.8, 0.7, 1],
+                      [0.7, 0.7, 0.8, 1],
+                      [0.8, 0.8, 0.7, 1],
+                      [0.8, 0.7, 0.8, 1],
+                      [0.7, 0.8, 0.8, 1]];
+    g_renderer.initialize(eyePosition, targetPosition, displayOutput, bodyColors);
+}
+
+// Physics initialization
+function initPhysics()
+{
+    for (var i = 0; i < 18; i++)
+    {
+        var body = new Body();
+        var pos = new Vector(Math.random(2*i),Math.random(5*i), Math.random(5*i));
+        var m = 1
+        switch(i){
+            case 0:
+            pos = new Vector(2,0,5);
+            // sizex = 1+(i/10)
+            break;
+            case 1:
+            pos = new Vector(-6,1,4);
+            // sizex = 1.5
+            break;
+            case 2:
+            // pos = new Vector(5,0,-3);
+            pos = new Vector(5,0,5);
+
+            break;
+            case 3:
+            // pos = new Vector(-5,0,-6);
+            pos = new Vector(-5,0,6);
+
+            break;
+            case 5:
+            // pos = new Vector(-6,1,-4);
+            pos = new Vector(4,1,5);
+
+            break;
+            case 6:
+            pos = new Vector(-1,0,6);
+            break;
+            case 7:
+            pos = new Vector(3,0,2);
+            break;
+            case 8:
+            // pos = new Vector(-4,0,-1);
+            pos = new Vector(-4,0,2);
+
+            break;
+            case 9:
+            pos = new Vector(-5,1,0);
+            break;
+            case 10:
+            pos = new Vector(6,0,-2);
+            break;
+/*             case 11:
+            pos = new Vector(3,0,-3);
+            break; */
+            case 11:
+            pos = new Vector(3,7,-5);
+            break;
+            case 12:
+            pos = new Vector(5,0,6);
+            break;
+            case 13:
+            pos = new Vector(-5,0,7);
+            break;
+            case 14:
+            pos = new Vector(2,2,-1);
+
+            break;
+            case 15:
+            // pos = new Vector(1,0,7);
+            pos = new Vector(2,0,4);
+
+            break;
+            case 16:
+            pos = new Vector(-3,0,3);
+
+            break;
+            case 17:
+            // pos = new Vector(-4,0,5);
+            pos = new Vector(-4,0,-3);
+
+            break;
+            case 18:
+            pos = new Vector(2,0,2.5);
+            break;
+        }
+
+
+        var rot = new Matrix2DH();
+        rot.setIdMat();
+        
+        if(i!=11)
+        body.createRB(1+(i/10), 1, 1, m, pos, rot);
+        else
+        body.createRB(7, 1, 0.5 , m, pos, rot);
+        g_world.rigidBodies.push(body);
+    }
+    
+    var wallPos = [[-20, 0, 0],
+                   [20,  0, 0],
+                   [0, -20, 0],
+                   [0,  20, 0],
+                   [0, 0, -20],
+                   [0, 0,  20],
+                   [0, 10,  0]];
+    
+    for (var i = 0; i < 6; i++)
+    {
+        var body = new Body();
+        var pos = new Vector(wallPos[i][0], wallPos[i][1], wallPos[i][2]);
+        var rot = new Matrix2DH();
+        rot.setIdMat();
+        body.createRB(24, 24, 12, -1, pos, rot);
+        // body.createRB(24, 24, 24, -1, pos, rot);
+
+        g_world.rigidBodies.push(body);
+
+    }
+
+    
+}
+
+
+function step(dt)
+{
+    if (g_running)
+        g_world.step(dt);
+}
+
+function displayOutput()
+{
+    step(1.0 / 30.0);
+    g_renderer.update();
+}
+
+</script>
+</head>
+<body onload="main()">
+<div id="o3d" style="width: 100%; height: 100%;"></div>
+</body>
+</html>
+
